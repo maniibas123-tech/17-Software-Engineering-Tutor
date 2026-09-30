@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{ name }}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--panel:#ffffff;--text:#111827;--muted:#6b7280;--a:#4f46e5;--b:#0ea5e9;--ut:#ffffff;--line:#e2e5ea}
+html,body{height:100%}
+body{font-family:'Inter',system-ui,monospace;color:var(--text);background:#e5e7eb;display:flex;align-items:center;justify-content:center;padding:18px}
+.app{width:100%;max-width:900px;height:calc(100vh - 36px);background:var(--panel);border:1px solid var(--line);border-radius:22px;box-shadow:0 20px 60px rgba(0,0,0,.28);display:flex;overflow:hidden}
+.side{display:none}
+.main{flex:1;display:flex;flex-direction:column;min-width:0}
+.top{display:flex;gap:14px;align-items:center;padding:16px 22px;background:linear-gradient(90deg,var(--a),var(--b));color:var(--ut)}
+.logo{font-size:32px;width:50px;height:50px;border-radius:50%;background:rgba(255,255,255,.28);display:flex;align-items:center;justify-content:center}
+.top h1{font-size:19px}
+.top p{font-size:13px;opacity:.85}
+.chat{flex:1;overflow-y:auto;padding:22px;display:flex;flex-direction:column;gap:14px}
+.msg{max-width:82%;padding:12px 16px;border-radius:18px;line-height:1.55;font-size:15px;word-wrap:break-word}
+.msg.bot{align-self:flex-start;background:rgba(127,127,127,.14);border:1px solid var(--line);border-bottom-left-radius:4px}
+.msg.user{align-self:flex-end;background:linear-gradient(135deg,var(--a),var(--b));color:var(--ut);border-bottom-right-radius:4px}
+.msg.err{border-color:#ef4444;color:#ef4444}
+.msg pre{background:rgba(0,0,0,.4);color:#f2f2f2;padding:10px 12px;border-radius:10px;overflow-x:auto;margin:8px 0;font-size:13px}
+.msg code{font-family:'Fira Code',Consolas,monospace;background:rgba(127,127,127,.25);padding:1px 5px;border-radius:5px;font-size:.9em}
+.msg pre code{background:none;padding:0}
+.msg ul{margin:6px 0 6px 20px}
+.msg h4{margin:8px 0 4px}
+.chips{display:flex;gap:8px;flex-wrap:wrap;padding:0 22px 10px}
+.chip{border:1px solid var(--a);color:var(--text);background:transparent;padding:6px 12px;border-radius:999px;font:inherit;font-size:13px;cursor:pointer;transition:.15s}
+.chip:hover{background:var(--a);color:var(--ut)}
+.composer{display:flex;gap:10px;padding:14px 22px 18px;border-top:1px solid var(--line)}
+textarea{flex:1;resize:none;max-height:120px;padding:12px 14px;border-radius:14px;border:1px solid var(--line);background:rgba(127,127,127,.1);color:var(--text);font:inherit;font-size:15px;outline:none}
+textarea:focus{border-color:var(--a)}
+#send{border:0;padding:0 24px;border-radius:14px;font:inherit;font-weight:700;color:var(--ut);background:linear-gradient(135deg,var(--a),var(--b));cursor:pointer}
+#send:disabled{opacity:.5;cursor:not-allowed}
+.dots span{display:inline-block;width:8px;height:8px;margin:0 2px;border-radius:50%;background:var(--a);animation:bounce 1s infinite}
+.dots span:nth-child(2){animation-delay:.15s}
+.dots span:nth-child(3){animation-delay:.3s}
+@keyframes bounce{0%,80%,100%{transform:translateY(0);opacity:.4}40%{transform:translateY(-6px);opacity:1}}
+
+/* Layout: sidebar */
+.layout-sidebar .app{max-width:1100px}
+.layout-sidebar .side{display:flex;flex-direction:column;gap:10px;width:250px;padding:26px 18px;border-right:1px solid var(--line);background:rgba(127,127,127,.08)}
+.side .big{font-size:52px}
+.side h2{font-size:18px}
+.side p{font-size:13px;color:var(--muted);margin-bottom:6px}
+.side button{text-align:left;padding:10px 12px;border-radius:12px;border:1px solid var(--line);background:transparent;color:var(--text);font:inherit;font-size:14px;cursor:pointer;transition:.15s}
+.side button:hover{background:linear-gradient(135deg,var(--a),var(--b));color:var(--ut);border-color:transparent}
+.layout-sidebar .top{background:transparent;color:var(--text);border-bottom:1px solid var(--line)}
+.layout-sidebar .logo{background:linear-gradient(135deg,var(--a),var(--b))}
+.layout-sidebar .chips{display:none}
+@media(max-width:780px){.layout-sidebar .side{display:none}.layout-sidebar .chips{display:flex}}
+
+/* Layout: terminal */
+.layout-terminal .app{max-width:1000px;border-radius:8px}
+.layout-terminal .top{background:rgba(0,0,0,.4);color:var(--a);padding:12px 18px;border-bottom:1px solid var(--line)}
+.layout-terminal .top::before{content:"\25CF \25CF \25CF";letter-spacing:4px;color:var(--b);font-size:12px}
+.layout-terminal .logo{width:auto;height:auto;background:none;font-size:22px}
+.layout-terminal .msg{max-width:100%;border-radius:2px;background:transparent;border:0;border-left:3px solid var(--a);padding:6px 12px}
+.layout-terminal .msg.user{align-self:stretch;background:transparent;color:var(--b);border-left-color:var(--b)}
+.layout-terminal .msg.user::before{content:"> ";font-weight:700}
+.layout-terminal .chip{border-radius:3px}
+.layout-terminal textarea,.layout-terminal #send{border-radius:3px}
+
+/* Layout: hero */
+.layout-hero .app{flex-direction:column;max-width:960px}
+.layout-hero .main{overflow:hidden}
+.layout-hero .top{flex-direction:column;align-items:flex-start;gap:6px;padding:28px 30px 54px}
+.layout-hero .logo{background:none;font-size:44px;width:auto;height:auto}
+.layout-hero .top h1{font-size:28px}
+.layout-hero .top p{font-size:15px}
+.layout-hero .chat{background:var(--panel);border-radius:26px 26px 0 0;margin-top:-28px;position:relative}
+.layout-hero .msg{border-radius:22px}
+
+/* Layout: classic */
+.layout-classic .msg.bot{border-radius:4px 18px 18px 18px}
+.layout-classic .msg.user{border-radius:18px 4px 18px 18px}
+</style>
+</head>
+<body class="layout-sidebar">
+<div class="app">
+  <aside class="side">
+    <div class="big">{{ emoji }}</div>
+    <h2>{{ name }}</h2>
+    <p>{{ tagline }}</p>
+    {% for t in topics %}<button class="topic" data-topic="{{ t }}">{{ t }}</button>{% endfor %}
+  </aside>
+  <main class="main">
+    <header class="top">
+      <div class="logo">{{ emoji }}</div>
+      <div><h1>{{ name }}</h1><p>{{ tagline }}</p></div>
+    </header>
+    <div id="chat" class="chat"></div>
+    <div id="chips" class="chips"></div>
+    <div class="composer">
+      <textarea id="input" rows="1" placeholder="Ask me about {{ domain }}..."></textarea>
+      <button id="send">Send</button>
+    </div>
+  </main>
+</div>
+
+<script>
+const WELCOME = {{ welcome|tojson }};
+const SUGGESTIONS = {{ suggestions|tojson }};
+const chat = document.getElementById("chat");
+const input = document.getElementById("input");
+const sendBtn = document.getElementById("send");
+const chips = document.getElementById("chips");
+let history = [];
+
+function esc(s){return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
+
+function md(t){
+  return t.split("```").map(function(p,i){
+    if(i%2){ p=p.replace(/^\w*\n/,""); return "<pre><code>"+esc(p)+"</code></pre>"; }
+    p=esc(p)
+      .replace(/`([^`\n]+)`/g,"<code>$1</code>")
+      .replace(/\*\*([^*]+)\*\*/g,"<strong>$1</strong>")
+      .replace(/^#{1,6} (.+)$/gm,"<h4>$1</h4>")
+      .replace(/^\s*[-*] (.+)$/gm,"<li>$1</li>");
+    p=p.replace(/(?:<li>.*<\/li>\n?)+/g,function(m){return "<ul>"+m.replace(/\n/g,"")+"</ul>";});
+    return p.replace(/\n/g,"<br>").replace(/<\/h4><br>/g,"</h4>").replace(/<\/ul><br>/g,"</ul>");
+  }).join("");
+}
+
+function addMsg(text, cls, raw){
+  const d = document.createElement("div");
+  d.className = "msg " + cls;
+  if(raw){ d.textContent = text; } else { d.innerHTML = md(text); }
+  chat.appendChild(d);
+  chat.scrollTop = chat.scrollHeight;
+  return d;
+}
+
+async function send(text){
+  text = (text || input.value).trim();
+  if(!text) return;
+  input.value = ""; input.style.height = "auto";
+  addMsg(text, "user", true);
+  sendBtn.disabled = true;
+  const typing = addMsg("", "bot");
+  typing.innerHTML = '<span class="dots"><span></span><span></span><span></span></span>';
+  try{
+    const res = await fetch("/chat", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({message: text, history: history})
+    });
+    const data = await res.json();
+    typing.remove();
+    if(data.reply){
+      addMsg(data.reply, "bot");
+      history.push({role:"user", text:text}, {role:"model", text:data.reply});
+    } else {
+      addMsg(data.error || "Something went wrong.", "bot err", true);
+    }
+  } catch(e){
+    typing.remove();
+    addMsg("Network error. Please try again.", "bot err", true);
+  }
+  sendBtn.disabled = false;
+  input.focus();
+}
+
+sendBtn.addEventListener("click", function(){ send(); });
+input.addEventListener("keydown", function(e){
+  if(e.key === "Enter" && !e.shiftKey){ e.preventDefault(); send(); }
+});
+input.addEventListener("input", function(){
+  input.style.height = "auto";
+  input.style.height = Math.min(input.scrollHeight, 120) + "px";
+});
+document.querySelectorAll(".topic").forEach(function(b){
+  b.addEventListener("click", function(){ send("Explain the basics of " + b.dataset.topic + "."); });
+});
+SUGGESTIONS.forEach(function(s){
+  const c = document.createElement("button");
+  c.className = "chip"; c.textContent = s;
+  c.addEventListener("click", function(){ send(s); });
+  chips.appendChild(c);
+});
+addMsg(WELCOME, "bot");
+</script>
+</body>
+</html>
